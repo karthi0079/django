@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Register Page</title>
+    <style>
+        body {
+            background-color: #f0f4f8;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+        .container {
+            margin-top: 700px;
+            width: 100%;
+            max-width: 450px;
+            padding: 30px;
+            background-color: #fff;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+        }
+        h2 {
+            text-align: center;
+            color: #333;
+            margin-bottom: 20px;
+            font-size: 24px;
+        }
+        input, button, select, label {
+            width: 100%;
+            padding: 12px;
+            margin: 8px 0;
+            border-radius: 8px;
+            border: 1px solid #ddd;
+            font-size: 16px;
+            box-sizing: border-box;
+        }
+        button {
+            background-color: #007bff;
+            color: white;
+            border: none;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+            font-weight: bold;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        a {
+            display: block;
+            margin-top: 15px;
+            text-align: center;
+            color: #007bff;
+            text-decoration: none;
+            transition: color 0.3s ease;
+        }
+        a:hover {
+            color: #0056b3;
+        }
+        .error {
+            color: red;
+            font-size: 14px;
+            text-align: center;
+        }
+        label {
+            font-weight: bold;
+            margin-bottom: 4px;
+            text-align: left;
+            display: inline-block;
+            color: #555;
+        }
+        .radio-group {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 5px 0;
+        }
+        .radio-group label {
+            margin-right: 10px;
+        }
+        .file-upload {
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            color: #555;
+            background-color: #f8f9fa;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h2>Register</h2>
+    <div class="error" id="error"></div>
+    
+    <!-- Wrap the form inputs inside a form tag -->
+    <form id="registerForm">
+        <label for="registerUsername">Username</label>
+        <input type="text" id="registerUsername" placeholder="Username" required>
+        
+        <label for="registerEmail">Email</label>
+        <input type="email" id="registerEmail" placeholder="Email" required>
+        
+        <label for="registerPassword">Password</label>
+        <input type="password" id="registerPassword" placeholder="Password" required>
+        
+        <label for="registerContact">Mobile Number</label>
+        <input type="tel" id="registerContact" placeholder="Mobile Number" required>
+        
+        <label for="registerDOB">Date of Birth</label>
+        <input type="date" id="registerDOB" required>
+        
+        <label for="registerImage">Upload Profile Image</label>
+        <input type="file" id="registerImage" accept="image/*" class="file-upload" required>
+        
+        <label for="registerFile">Upload Resume</label>
+        <input type="file" id="registerFile" accept=".pdf,.doc,.docx" class="file-upload" required>
+        
+        <div class="radio-group">
+            <label>
+                <input type="radio" name="gender" value="Male" required> Male
+            </label>
+            <label>
+                <input type="radio" name="gender" value="Female" required> Female
+            </label>
+            <label>
+                <input type="radio" name="gender" value="Other" required> Other
+            </label>
+        </div>
+
+        <label for="registerSkills">Skills</label>
+        <select id="registerSkills" required>
+            <option value="">Select a skill</option>
+            <option value="HTML">HTML</option>
+            <option value="CSS">CSS</option>
+            <option value="JavaScript">JavaScript</option>
+            <option value="Python">Python</option>
+            <option value="Java">Java</option>
+        </select>
+        
+        <div class="radio-group">
+            <label>
+                <input type="radio" name="userRole" value="User" required> User
+            </label>
+            <label>
+                <input type="radio" name="userRole" value="Admin" required> Admin
+            </label>
+        </div>
+        
+        <button type="submit">Sign Up</button>
+    </form>
+
+    <a href="index.html">Already have an account? Log in</a>
+</div>
+
+<script>
+    document.getElementById('registerForm').addEventListener('submit', function(event) {
+        event.preventDefault();
+        
+        const username = document.getElementById('registerUsername').value;
+        const email = document.getElementById('registerEmail').value;
+        const password = document.getElementById('registerPassword').value;
+        const contact = document.getElementById('registerContact').value;
+        const dob = document.getElementById('registerDOB').value;
+        const image = document.getElementById('registerImage').files[0];
+        const file = document.getElementById('registerFile').files[0];
+
+        const genderOption = document.querySelector('input[name="gender"]:checked');
+        if (!genderOption) {
+            document.getElementById('error').textContent = 'Please select a gender';
+            return;
+        }
+        const gender = genderOption.value;
+
+        const skills = document.getElementById('registerSkills').value;
+        const role = document.querySelector('input[name="userRole"]:checked').value;
+
+        if (localStorage.getItem(username)) {
+            document.getElementById('error').textContent = 'Username already exists';
+        } else {
+            const reader = new FileReader();
+            reader.onloadend = function() {
+                const user = { 
+                    username, 
+                    email, 
+                    password, 
+                    contact, 
+                    dob, 
+                    image: reader.result, 
+                    file: file.name, 
+                    gender, 
+                    skills, 
+                    role 
+                };
+                localStorage.setItem(username, JSON.stringify(user));
+                alert('Registration successful! You can now log in.');
+                window.location.href = 'index.html';
+            };
+
+            if (image) {
+                reader.readAsDataURL(image);
+            } else {
+                document.getElementById('error').textContent = 'Please upload a profile image';
+            }
+        }
+    });
+</script>
+
+</body>
+</html>

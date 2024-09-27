@@ -1,0 +1,439 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Admin Dashboard - User Management</title>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500&display=swap" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
+    <style>
+        body {
+            background-color: #f4f6f9;
+            font-family: 'Roboto', sans-serif;
+            margin: 0;
+            padding: 0;
+        }
+        .navbar {
+            background-color: #343a40;
+            padding: 15px 20px;
+            color: #fff;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .navbar h2 {
+            margin: 0;
+            font-weight: 500;
+        }
+        .navbar button {
+            background-color: #dc3545;
+            border: none;
+            padding: 10px 20px;
+            color: white;
+            font-size: 14px;
+            cursor: pointer;
+            border-radius: 5px;
+            transition: background-color 0.3s;
+        }
+        .navbar button:hover {
+            background-color: #c82333;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 30px auto;
+            padding: 0 20px;
+        }
+        .table-container {
+            overflow-x: auto;
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            min-width: 800px;
+        }
+        th, td {
+            padding: 12px 15px;
+            text-align: center;
+            border-bottom: 1px solid #e0e0e0;
+        }
+        th {
+            background-color: #007bff;
+            color: #fff;
+            text-transform: uppercase;
+            font-size: 14px;
+            letter-spacing: 0.03em;
+        }
+        tr:hover {
+            background-color: #f1f1f1;
+        }
+        .profile-img {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            object-fit: cover;
+        }
+        .download-link {
+            color: #007bff;
+            text-decoration: none;
+            font-weight: 500;
+        }
+        .download-link:hover {
+            text-decoration: underline;
+        }
+        @media (max-width: 768px) {
+            th, td {
+                padding: 8px 10px;
+            }
+            .navbar h2 {
+                font-size: 20px;
+            }
+            .navbar button {
+                padding: 8px 15px;
+                font-size: 12px;
+            }
+        }
+        .filters {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        .filters button {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            background-color: #007bff;
+            color: white;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        .filters button:hover {
+            background-color: #0056b3;
+        }
+        .filters button.active {
+            background-color: #28a745;
+        }
+        .action-buttons {
+            display: flex;
+            justify-content: space-around;
+        }
+        .action-buttons {
+            display: flex;
+            justify-content: space-around;
+        }
+    
+        .action-buttons button {
+            padding: 8px 12px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s, transform 0.2s;
+            font-weight: 500;
+        }
+    
+        .action-buttons button:hover {
+            transform: translateY(-2px);
+        }
+    
+        .edit-btn {
+            background-color: #007bff;
+            color: white;
+        }
+    
+        .edit-btn:hover {
+            background-color: #0056b3;
+        }
+    
+        .delete-btn {
+            background-color: #dc3545;
+            color: white;
+        }
+    
+        .delete-btn:hover {
+            background-color: #c82333;
+        }
+        #generatePDF {
+            background-color: #28a745;
+            border: none;
+            padding: 10px 20px;
+            color: white;
+            font-size: 14px;
+            cursor: pointer;
+            border-radius: 5px;
+            margin-left: 10px;
+        }
+
+        #generatePDF:hover {
+            background-color: #218838;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="navbar">
+        <h2>Admin Dashboard</h2>
+        <button onclick="logout()">Logout</button>
+    </div>
+
+    <div class="container">
+        <div class="filters">
+            <button onclick="filterUsers('all')" class="active" id="allUsersBtn">Show All</button>
+            <button onclick="filterUsers('Male')">Male Users</button>
+            <button onclick="filterUsers('Female')">Female Users</button>
+            <button onclick="filterUsersBySkills('JavaScript')">JavaScript Users</button>
+            <button onclick="filterUsersBySkills('Python')">Python Users</button>
+            <button id="generatePDF" onclick="generatePDF()">Generate PDF</button>
+
+        </div>
+
+        <div class="table-container">
+            <table id="userTable">
+                <thead>
+                    <tr>
+                        <th>S.No</th>
+                        <th>Username</th>
+                        <th>Email</th>
+                        <th>Mobile</th>
+                        <th>Date of Birth</th>
+                        <th>Gender</th>
+                        <th>Skills</th>
+                        <th>Profile Image</th>
+                        <th>Resume</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <!-- User details will be appended here -->
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <script>
+        const adminUsername = "admin"; // Admin username
+        let users = []; // Store user data
+
+        // Load all users from localStorage
+        function loadUsers() {
+            users = []; // Reset the users array
+            for (let i = 0; i < localStorage.length; i++) {
+                const username = localStorage.key(i);
+                if (username === adminUsername || username === 'sessionToken') continue;
+
+                const user = JSON.parse(localStorage.getItem(username));
+                if (user && user.username && user.email) {
+                    users.push(user); // Add user to users array
+                }
+            }
+            displayUsers(users); // Display all users initially
+        }
+
+        // Display users in the table
+        function displayUsers(userList) {
+            const userTable = document.getElementById('userTable').getElementsByTagName('tbody')[0];
+            userTable.innerHTML = ""; // Clear the table body
+
+            let serialNo = 1;
+            userList.forEach(user => {
+                // Create a new row for each user
+                const row = userTable.insertRow();
+                row.insertCell(0).textContent = serialNo++;
+                row.insertCell(1).textContent = user.username;
+                row.insertCell(2).textContent = user.email;
+                row.insertCell(3).textContent = user.contact;
+                row.insertCell(4).textContent = user.dob;
+                row.insertCell(5).textContent = user.gender;
+                row.insertCell(6).textContent = user.skills;
+
+                // Profile Image
+                const cellImage = row.insertCell(7);
+                const img = document.createElement('img');
+                img.src = user.image || 'default-avatar.png';
+                img.alt = `${user.username}'s Profile Image`;
+                img.className = 'profile-img';
+                cellImage.appendChild(img);
+
+                // Resume
+                const cellResume = row.insertCell(8);
+                if (user.file) {
+                    const resumeLink = document.createElement('a');
+                    resumeLink.href = user.file;
+                    resumeLink.textContent = 'Download';
+                    resumeLink.className = 'download-link';
+                    resumeLink.download = user.file;
+                    cellResume.appendChild(resumeLink);
+                } else {
+                    cellResume.textContent = 'No Resume';
+                }
+
+                // Actions
+                const cellActions = row.insertCell(9);
+                const editBtn = document.createElement('button');
+                editBtn.textContent = 'Edit';
+                editBtn.className = 'edit-btn'; // Add edit-btn class
+                editBtn.onclick = () => editUser(user.username);
+                const deleteBtn = document.createElement('button');
+                deleteBtn.textContent = 'Delete';
+                deleteBtn.className = 'delete-btn'; // Add delete-btn class
+                deleteBtn.onclick = () => deleteUser(user.username);
+                cellActions.appendChild(editBtn);
+                cellActions.appendChild(deleteBtn);
+            });
+        }
+
+       // Edit user functionality
+function editUser(username) {
+    const user = JSON.parse(localStorage.getItem(username)); // Get user data from localStorage
+    if (user) {
+        // Prompt user for new details
+        const newUsername = prompt("Edit Username:", user.username);
+        const newEmail = prompt("Edit Email:", user.email);
+        const newContact = prompt("Edit Contact:", user.contact);
+        const newDob = prompt("Edit Date of Birth:", user.dob);
+        const newGender = prompt("Edit Gender:", user.gender);
+        const newSkills = prompt("Edit Skills:", user.skills);
+        
+        // Check if new values are not empty before updating
+        if (newUsername && newEmail && newContact && newDob && newGender && newSkills) {
+            
+            // Remove old user data (old username)
+            localStorage.removeItem(username);
+            
+            // Update the user data with new inputs
+            user.username = newUsername;
+            user.email = newEmail;
+            user.contact = newContact;
+            user.dob = newDob;
+            user.gender = newGender;
+            user.skills = newSkills;
+
+            // Save updated user back to localStorage with new username
+            localStorage.setItem(newUsername, JSON.stringify(user));
+
+            // Reload users to update the display
+            loadUsers(); 
+            
+            alert('User details updated successfully!');
+        } else {
+            alert('All fields are required to update the user!');
+        }
+    } else {
+        alert('User not found!');
+    }
+}
+
+        // Delete user functionality
+        function deleteUser(username) {
+            if (confirm(`Are you sure you want to delete user ${username}?`)) {
+                localStorage.removeItem(username);
+                loadUsers(); // Reload users to update the display
+            }
+        }
+
+        // Filter users by role
+        function filterUsers(role) {
+            let filtered = [];
+            if (role === 'all') {
+                filtered = users; // Show all users
+                console.log(filtered);
+            } else {
+                filtered = users.filter(user => user.gender === role); // Filter by gender
+            }
+
+            // Update button states
+            document.querySelectorAll('.filters button').forEach(button => {
+                button.classList.remove('active');
+                if (button.id === `${role}UsersBtn`) {
+                    button.classList.add('active');
+                }
+            });
+
+            displayUsers(filtered); // Display filtered users
+        }
+
+        // Filter users by skills
+        function filterUsersBySkills(skill) {
+            const filtered = users.filter(user => user.skills.includes(skill));
+            displayUsers(filtered); // Display filtered users
+        }
+
+        // Logout functionality
+        function logout() {
+            localStorage.removeItem('sessionToken'); // Remove session token
+            window.location.href = 'index.html'; // Redirect to login page
+        }
+
+        function generatePDF() {
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF('p', 'pt', 'a4'); // 'p' for portrait, 'a4' for standard page size in points
+            
+            // Add a title to the PDF
+            doc.setFontSize(18);
+            doc.text('User List', 40, 40);
+            
+            // Set column headers
+            let columns = ["S.No", "Username", "Email", "Mobile", "DOB", "Gender", "Skills"];
+            let columnWidths = [40, 80, 160, 100, 60, 60, 100]; // Adjust the widths as needed
+            
+            // Set initial y position for the table
+            let yPosition = 80;
+            
+            // Table header
+            doc.setFontSize(12);
+            let xOffset = 40; // Left margin
+            columns.forEach((col, index) => {
+                doc.text(col, xOffset, yPosition);
+                xOffset += columnWidths[index]; // Move to next column
+            });
+            
+            yPosition += 20; // Move y position for table rows
+            
+            // Loop through the users and add them to the PDF
+            let serialNo = 1;
+            users.forEach(user => {
+                let xOffset = 40; // Reset for each row
+                
+                // Add user data to each column
+                doc.text(String(serialNo++), xOffset, yPosition);
+                xOffset += columnWidths[0];
+                
+                doc.text(user.username, xOffset, yPosition);
+                xOffset += columnWidths[1];
+                
+                doc.text(user.email, xOffset, yPosition);
+                xOffset += columnWidths[2];
+                
+                doc.text(user.contact, xOffset, yPosition);
+                xOffset += columnWidths[3];
+                
+                doc.text(user.dob, xOffset, yPosition);
+                xOffset += columnWidths[4];
+                
+                doc.text(user.gender, xOffset, yPosition);
+                xOffset += columnWidths[5];
+                
+                doc.text(user.skills, xOffset, yPosition);
+                
+                yPosition += 20; // Move to the next row
+                
+                // Add a new page if content exceeds page height
+                if (yPosition > 750) {
+                    doc.addPage();
+                    yPosition = 40; // Reset y position for the new page
+                }
+            });
+            
+            // Save the PDF
+            doc.save('user-list.pdf');
+        }
+        
+
+        // Initialize and load users when the page loads
+        window.onload = loadUsers;
+
+    </script>
+</body>
+</html>
